@@ -1,0 +1,50 @@
+X0_Robert-Jordan X01_partner X2_Robert X2_Jordan X3_LEFT
+X0_Steptoe X11_partner-at X3_RIGHT
+X0_Washington X11_law-in X3_RIGHT
+X0_Washington X11_firm-in X3_RIGHT
+X0_James-Jones X01_partner X2_James X2_Jones X3_LEFT
+X0_Arnold X11_partner-of X3_RIGHT
+X0_Jamie-Gorelick X01_partner X2_Jamie X2_Gorelick X3_LEFT
+X0_September X11_rate-in X3_RIGHT
+X0_February X11_rate-of X3_RIGHT
+X0_October X11_rate-in X3_RIGHT
+X0_Jerry-Jasinowski X01_economist X2_Jerry X2_Jasinowski X3_LEFT
+X0_National-Association X11_economist-at X2_National X2_Association X3_RIGHT
+X0_Colin-Gough X01_head X2_Colin X2_Gough X3_LEFT
+X0_University X11_head-at X3_RIGHT
+X0_Nature X01_journal X3_LEFT
+X0_Strasbourg X11_conference-in X3_RIGHT
+X0_Robert-Laudise X01_director X2_Robert X2_Laudise X3_LEFT
+X0_PacifiCorp X01_company X3_LEFT
+X0_Omnibus-Trade-Competitiveness-Act X11_Section-of X2_Omnibus X2_Trade X2_Competitiveness X2_Act X3_RIGHT
+X0_Wall-Street X11_shot-at X2_Wall X2_Street X3_RIGHT
+X0_Wall-Street X01_enterprise X2_Wall X2_Street X3_LEFT
+X0_Maury-Cooper X01_president X2_Maury X2_Cooper X3_LEFT
+X0_S.&P. X11_president-at X7_.&. X3_RIGHT
+X0_John-A.-Rollwagen X01_chairman X2_John X2_A. X2_Rollwagen X7_. X3_LEFT
+X0_Robert-H.-Ewald X01_president X2_Robert X2_H. X2_Ewald X7_. X3_LEFT
+X0_Edward-A.-Masi X01_president X2_Edward X2_A. X2_Masi X7_. X3_LEFT
+X0_Lester-T.-Davis X01_president X2_Lester X2_T. X2_Davis X7_. X3_LEFT
+X0_Donald-O.-Dulude X01_chairman X2_Donald X2_O. X2_Dulude X7_. X3_LEFT
+X0_American-Stock-Exchange X11_trading-on X2_American X2_Stock X2_Exchange X3_RIGHT
+X0_Togo-Seisakusyo X11_venture-with X2_Togo X2_Seisakusyo X3_RIGHT
+X0_Securities-Association X01_regulator X2_Securities X2_Association X3_LEFT
+X0_Cynthia-Grantz X11_view-of X2_Cynthia X2_Grantz X3_RIGHT
+X0_Cynthia-Grantz X01_president X2_Cynthia X2_Grantz X3_LEFT
+X0_Rockford-Coatings-Corporation X11_president-of X2_Rockford X2_Coatings X2_Corporation X3_RIGHT
+X0_Luis-Vigdor X01_president X2_Luis X2_Vigdor X3_LEFT
+X0_M.T.B.-Banking-Corporation X11_president-of X2_M.T.B. X2_Banking X2_Corporation X7_... X3_RIGHT
+X0_M.T.B.-Banking-Corporation X01_dealer X2_M.T.B. X2_Banking X2_Corporation X7_... X3_LEFT
+X0_New-York-Mercantile-Exchange X11_ounce-on X2_New X2_York X2_Mercantile X2_Exchange X3_RIGHT
+X0_Bruce-Kaplan X01_president X2_Bruce X2_Kaplan X3_LEFT
+X0_Metals-Incorporated X11_president-of X2_Metals X2_Incorporated X3_RIGHT
+X0_California X01_wholesaler X3_LEFT
+X0_U.S. X11_coin-in X6_ALLCAP2 X7_.. X3_RIGHT
+X0_Re X01_Failure X3_LEFT
+X0_Kyocera X01_maker X3_LEFT
+X0_Sumatra X11_smelter-in X3_RIGHT
+X0_Abdul-Rauf-Suhud X01_chairman X2_Abdul X2_Rauf X2_Suhud X3_LEFT
+X0_Asahan-Authority X11_chairman-of X2_Asahan X2_Authority X3_RIGHT
+X0_Tokyo X01_source X3_LEFT
+X0_Guernsey X01_company X3_LEFT
+X0_Mr.-Suhud X01_minister X2_Mr. X2_Suhud X7_. X3_LEFT
