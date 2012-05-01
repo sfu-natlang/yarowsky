@@ -1,0 +1,15 @@
+set -e
+
+if [ ! "$RUNDIR" ]; then
+	echo "error: need environment variables set" 1>&2
+	exit 1
+fi
+
+if [ $# != 1 ]; then
+	echo "usage: $0 DL" 1>&2
+	exit 1
+fi
+
+dlfile=$1
+
+nl -b a -w 1 -s ' ' "$dlfile" | sed -e 's! 1$!} \\exlabel{loc.}!g;s! 2$!} \\exlabel{per.}!g;s! 3$!} \\exlabel{org.}!g;s!X01_\|X11_\|X3_!\\contextfeat{!g;s!X[0-9][0-9]\?_!\\spellfeat{!g;s! !\&!g;s!$!\\\\!g'

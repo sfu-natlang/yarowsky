@@ -1,0 +1,7 @@
+This directory contains the data and scripts for running our experiments. See the "runall" script for how to run the experiments, and either use the script directly or use it as a list of steps to follow.
+
+The data is the named entity classification task of Collins & Singer 1999 and three of the word sense disambiguation tasks of Eisner and Karakos 2005. The original data was provided by the respective authors, and has been reformatted here. The named entity test set has been filtered to remove month and weekday examples as described in Collins & Singer 1999.
+
+We believe that it is all right to include the data in this submission, but will remove it if there are any concerns.
+
+Some of the experiment scripts may require modification to work in paths containing filenames with spaces.

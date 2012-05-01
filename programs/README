@@ -1,0 +1,5 @@
+Programs implementing various algorithms for semi-supervised learning. See source headers for specifics.
+
+The separate experiments package contains examples of use.
+
+Use the makefile to build binaries. The programs are implemented in OCaml and have been tested with OCaml 3.12.1.

@@ -1,0 +1,66 @@
+set -e
+
+if [ ! "$RUNDIR" -o ! "$RESULTDIR" ]; then
+	echo "error: need environment variables set" 1>&2
+	exit 1
+fi
+
+if [ $# -nt 5 -o $# -gt 6 ]; then
+	echo "usage: $0 ACCURACY-CLEANNESS ACCURACY-SEEDEDNESS DATA PROG PARTNAMES [OBJECTIVE]" 1>&2
+	exit 1
+fi
+
+accuracycleanness=$1
+accuracyseededness=$2
+data=$3
+prog=$4
+partnames=$5
+objective=$6
+
+case $accuracycleanness in
+noise) accuracycol=20;;
+clean) accuracycol=27;;
+*) echo "error: unknown accuracy cleanness $accuracycleanness" 1>&2; exit 1;;
+esac
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp" "$all"' EXIT
+
+cat "$partnames" | while read part partname; do
+	cat "$RUNDIR/$data.$prog.run/out" | grep '^iteration ' | awk '{ print $2, $NF }' > "$tmp/coverage.dat"
+	cat "$RUNDIR/$data.$prog.run/out" | awk "/^$objective / { o=\$NF } /^iteration / { print \$2, o }" > "$tmp/objective.dat"
+	{
+		cat "$RESULTDIR/$data.$prog.result/$part.$accuracyseededness"
+		maxiter=$(cat "$RESULTDIR/$data.$prog.result/$part.$accuracyseededness" | tail -1 | cut -d ' ' -f 1)
+		cat "$RESULTDIR/$data.$prog.retrain.$part.result/main.$accuracyseededness" | awk "{ \$1=\$1+$maxiter; print}"
+	} | cut -d ' ' -f 1,$accuracycol > "$tmp/$part.accuracy.dat"
+done
+
+{
+cat <<END
+set term postscript
+set key bottom right
+set xlabel "Iteration"
+set ylabel "Non-seeded test accuracy | Coverage"
+set yrange [0.4:1.0]
+set ytics nomirror
+END
+
+if [ "$objective" ]; then
+cat <<END
+set y2label "Propagation objective value"
+set log x
+set y2tics nomirror
+set xrange [2:]
+END
+fi
+
+echo -n 'plot '
+{
+	cat "$partnames" | while read part partname; do
+		echo "'$tmp/$part.accuracy.dat' using 1:2 with lines title '$part'"
+	done
+	echo "'$tmp/coverage.dat' using 1:2 with lines axes x1y1 title 'coverage'"
+	[ "$objective" ] && echo "'$tmp/objective.dat' using 1:2 with lines axes x1y2 title 'objective'"
+} | tr '\n' ',' | sed -e 's|,$||g'
+} | gnuplot | ps2pdf - -

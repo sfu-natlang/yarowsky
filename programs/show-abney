@@ -1,0 +1,10 @@
+
+PROGDIR=$1
+DATADIR=$2
+USESUM=$3
+
+ls -1 *.dl | sort -n | sed -e 's|\.dl$| |g' | while read prefix; do
+	echo "$prefix " | tr -d '\n'
+	abneystats "$DATADIR"/labels "$prefix".dl "$DATADIR"/train "$prefix".train $USESUM
+done
+

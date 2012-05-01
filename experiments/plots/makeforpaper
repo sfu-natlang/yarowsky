@@ -1,0 +1,10 @@
+./plotaccuracy clean nonseeded namedentity prognames-accuracyplot-dl main > accuracycomparison-dl.pdf
+./plotaccuracy clean nonseeded namedentity prognames-accuracyplot-prop main > accuracycomparison-prop.pdf
+./plotdetail clean nonseeded namedentity yarowskyprop.cautious.thetaonly.theta.1 partnames-accuracyplot > thetaonlydetail-cautious.pdf
+./plotdetail clean nonseeded namedentity yarowskyprop.noncautious.thetaonly.theta.1 partnames-accuracyplot > thetaonlydetail-noncautious.pdf
+./plotdetail clean nonseeded namedentity yarowskyprop.noncautious.bipartite.phi.1 partnames-objectiveplot propagation > phithetanoncautiousobjective.pdf
+./makeaccuracytable clean datanames prognames-accuracytable main dlcotrain.cautious > accuracytable-vsdlcotrain.tex
+./makeaccuracytable clean datanames prognames-accuracytable main yarowsky.cautious.max > accuracytable-vsyarowskycautious.tex
+./showtables accuracytable-vsdlcotrain.tex accuracytable-vsyarowskycautious.tex > accuracytables.pdf
+./findexamples yarowskyprop.cautious.thetaonly.theta.1 namedentity progs-findgood > yarowskypropcautiousthetaonly-examples
+./makeexamplenedl ../runs/namedentity.yarowsky.noncautious.max.run/5.dl > example.dl

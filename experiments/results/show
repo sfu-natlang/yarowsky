@@ -1,0 +1,28 @@
+#
+# Do evaluation on all test labellings found in a directory..
+#
+
+set -e
+
+if [ $# != 6 ]; then
+	echo "usage: $0 RUN-DIR EVALUATE-PROGRAM LABELS GOLD SEED-LABELLING OUTPUT-DIR"
+	exit 1
+fi
+
+dir=$1
+evaluate=$2
+labels=$3
+gold=$4
+seedlabelling=$5
+outdir=$6
+
+iters=$(mktemp)
+all=$(mktemp)
+trap 'rm -rf "$iters" "$all"' EXIT
+
+find "$dir" -maxdepth 1 -name '*.test' -exec basename {} .test \; | cut -d . -f 2- | sort | uniq | while read part; do
+	find "$dir" -maxdepth 1 -name "*.$part.test" -exec basename {} .test \; | cut -d . -f 1 | sort -n > "$iters"
+	cat "$iters" | while read iter; do echo "$dir/$iter.$part.test"; done > "$all"
+	cat "$all" | xargs "$evaluate" "$labels" "$gold" | paste -d ' ' "$iters" - > "$outdir/$part.normal"
+	cat "$all" | xargs "$evaluate" -s "$seedlabelling" "$labels" "$gold" | paste -d ' ' "$iters" - > "$outdir/$part.nonseeded"
+done

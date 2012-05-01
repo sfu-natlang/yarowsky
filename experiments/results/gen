@@ -1,0 +1,48 @@
+#
+# Generate commands to evaluate the performance of each classifier saved during the experiment runs.
+#
+
+set -e
+
+if [ ! "$PROGDIR" -o ! "$DATADIR" -o ! "$RUNDIR" -o ! "$SEEDLABELLINGDIR" -o ! "$RESULTDIR" ]; then
+	echo "error: need environment variables set" 1>&2
+	exit 1
+fi
+
+havereps=$(mktemp)
+trap 'rm -rf "$havereps"' EXIT
+
+find "$RUNDIR" -type d \( -name '*.run' -or -name '*.retrain' \) | while read run; do
+	case "$run" in
+	*.retrain)
+		parentname=$(basename $(dirname "$run") .run)
+		part=$(basename "$run" .retrain | sed -e 's|^[0-9]\+\.||g')
+		name=$parentname.retrain.$part
+		;;
+	*)
+		part=$(basename "$run" .retrain | sed -e 's|^[0-9]\+\.||g')
+		name=$(basename "$run" .run)
+		;;
+	esac
+
+	file=$RESULTDIR/$name.result
+	if [ -e "$file" ]; then
+		echo "$name: already done" 1>&2
+	else
+		echo "$name: running" 1>&2
+		data=$(echo $name | cut -d . -f 1)
+		mkdir -p "$file"
+		echo "$RESULTDIR/show $run $PROGDIR/evaluate $DATADIR/$data/labels $DATADIR/$data/gold $SEEDLABELLINGDIR/$data $file 1>$file/out 2>$file/err"
+	fi
+
+	(echo "$name" | grep '\.rep[0-9]\+' || true) >> "$havereps"
+done
+
+cat "$havereps" | sed -e 's|\.rep[0-9]\+|.REP|g' | sort | uniq | while read run; do
+	if [ -e "$RESULTDIR/$name.mean.result" -a -e "$RESULTDIR/$name.stddev.result" ]; then
+		echo "averaging $run: already done" 1>&2
+	else
+		echo "averaging $run: running" 1>&2
+		echo "$RESULTDIR/average $RESULTDIR/$run.result"
+	fi
+done

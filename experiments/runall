@@ -1,0 +1,47 @@
+#
+# Complete experiment script.
+#
+# The main run and evaluation steps are done by generating lists of commands
+# which can be passed to a job scheduler. The basic scheduler "runjobs" used
+# here runs commands on the local machine with an option to run in parallel.
+# There is no checking of file dependencies or removing of incomplete output
+# from failed jobs. The commands run by the main run and evaluation step save
+# stdout and stderr to "out" and "err" files in the output directories, so
+# these can be checked to detect errors.
+#
+# If you run the steps individually then you will need to set some or all of
+# the environment variables as below.
+#
+
+# Number of jobs to run in parallel at once.
+numparalleljobs=${1:-1}
+# The directory containing this script.
+currentdir=$(cd ${2:-$(dirname "$0")}; pwd)
+
+# Path to algorithm program binaries.
+export PROGDIR=$currentdir/../programs
+# Path to data.
+export DATADIR=$currentdir/data
+
+# Directory for the algorithm runs.
+export RUNDIR=$currentdir/runs
+# Directory for seed-rule labellings of the test sets.
+export SEEDLABELLINGDIR=$currentdir/seed-labellings
+# Directory for accuracy results for each step of each algorithm run.
+export RESULTDIR=$currentdir/results
+# Directory for plots and tables.
+export PLOTSDIR=$currentdir/plots
+
+# Do all the algorithm runs. Edit $RUNDIR/gen to change parameters.
+"$RUNDIR"/gen | "$currentdir"/runjobs $numparalleljobs
+# Produce seed-rule labellings for each test set.
+"$SEEDLABELLINGDIR"/make
+# Evaluate each test set labelling produced durring the algorithm runs. There
+# is no check for file dependencies here, so this has to be run after all the
+# algorithm runs finish.
+"$RESULTDIR"/gen | "$currentdir"/runjobs $numparalleljobs
+# Generate the plots and tables for the paper. The files in $PLOTSDIR can
+# produce other plots as well, if desired; look at them for more information.
+# Statistical significance checks in the accuracy table will only be included
+# if R is found in the path.
+(cd "$PLOTSDIR" && ./makeforpaper)

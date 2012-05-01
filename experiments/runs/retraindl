@@ -1,0 +1,33 @@
+#
+# Retrain an unbounded decision list on the last train set labelling from another classifier.
+#
+
+set -e
+
+if [ $# -ne 8 ]; then
+	echo "usage: $0 DIR TRAINDL LABELS FEATURES TRAIN TEST SEEDS SMOOTHING"
+	exit 1
+fi
+
+DIR=$1
+TRAINDL=$2
+LABELS=$3
+FEATURES=$4
+TRAIN=$5
+TEST=$6
+SEEDS=$7
+SMOOTHING=$8
+
+maxiter=$((cd "$DIR" && ls -1 *.train) | cut -d . -f 1 | sort -n | tail -1)
+(cd "$DIR" && ls -1 "$maxiter"*.train) | sed -e 's|^[0-9]\+\.||g;s|train$||g' | while read part; do
+	dir="$DIR/$maxiter.${part}retrain"
+	if [ -e "$dir" ]; then
+		echo "retrain directory already exists" 1>&2
+		exit 1
+	fi
+	mkdir -p "$dir"
+	{
+		cd "$dir"
+		"$TRAINDL" "$LABELS" "$FEATURES" "$TRAIN" "$TEST" "$DIR/$maxiter.${part}train" "$SEEDS" "$SMOOTHING" 0 -1 1>out 2>err
+	}
+done

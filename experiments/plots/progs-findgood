@@ -1,0 +1,17 @@
+dl.max noretrain main
+dlcotrain.cautious retrain main
+yarowsky.noncautious.max retrain main
+yarowsky.cautious.max retrain main
+yarowsky.cautious.sum retrain main
+hsgraph.average.average retrain main
+hsgraph.average.majority retrain main
+hsgraph.majority.average retrain main
+hsgraph.majority.majority retrain main
+yarowskyprop.noncautious.bipartite.phi.1 retrain main
+yarowskyprop.noncautious.bipartite.pi.1 retrain main
+yarowskyprop.noncautious.thetaonly.theta.1 retrain main
+yarowskyprop.noncautious.thetaonly.thetatype.1 retrain main
+yarowskyprop.cautious.bipartite.phi.1 retrain main
+yarowskyprop.cautious.bipartite.pi.1 retrain main
+yarowskyprop.cautious.thetaonly.theta.1 retrain main
+yarowskyprop.cautious.thetaonly.thetatype.1 retrain main

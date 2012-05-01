@@ -1,0 +1,8 @@
+dlcotrain.cautious DL-CoTrain (cautious)
+yarowsky.noncautious.max Yarowsky
+yarowsky.cautious.max Yarowsky-cautious
+yarowsky.cautious.sum Yarowsky-cautious sum
+yarowskyprop.cautious.bipartite.phi.1 Yarowsky-prop-cautious phi-theta
+yarowskyprop.cautious.bipartite.pi.1 Yarowsky-prop-cautious pi-theta
+yarowskyprop.cautious.thetaonly.theta.1 Yarowsky-prop-cautious theta-only
+yarowskyprop.cautious.thetaonly.thetatype.1 Yarowsky-prop-cautious thetatype-only

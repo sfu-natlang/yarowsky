@@ -1,0 +1,25 @@
+csem.0.1.0.98.0.02.mean noretrain nosignif EM mean
+csem.0.1.0.98.0.02.stddev noretrain nosignif EM stddev
+
+dl.max noretrain signif Seed DL
+
+dlcotrain.cautious retrain signif DL-CoTrain (cautious)
+
+yarowsky.noncautious.max retrain signif Yarowsky
+yarowsky.cautious.max retrain signif Yarowsky-cautious
+yarowsky.cautious.sum retrain signif Yarowsky-cautious sum
+
+hsgraph.average.average retrain signif HS-bipartite avg-avg
+hsgraph.average.majority retrain signif HS-bipartite avg-maj
+hsgraph.majority.average retrain signif HS-bipartite maj-avg
+hsgraph.majority.majority retrain signif HS-bipartite maj-maj
+
+yarowskyprop.noncautious.bipartite.phi.1 retrain signif Yarowsky-prop $\phi$-$\theta$
+yarowskyprop.noncautious.bipartite.pi.1 retrain signif Yarowsky-prop $\pi$-$\theta$
+yarowskyprop.noncautious.thetaonly.theta.1 retrain signif Yarowsky-prop $\theta$-only
+yarowskyprop.noncautious.thetaonly.thetatype.1 retrain signif Yarowsky-prop $\theta^\text{T}$-only
+
+yarowskyprop.cautious.bipartite.phi.1 retrain signif Yarowsky-prop-cautious $\phi$-$\theta$
+yarowskyprop.cautious.bipartite.pi.1 retrain signif Yarowsky-prop-cautious $\pi$-$\theta$
+yarowskyprop.cautious.thetaonly.theta.1 retrain signif Yarowsky-prop-cautious $\theta$-only
+yarowskyprop.cautious.thetaonly.thetatype.1 retrain signif Yarowsky-prop-cautious $\theta^\text{T}$-only

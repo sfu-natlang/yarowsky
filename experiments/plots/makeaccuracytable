@@ -1,0 +1,124 @@
+set -e
+
+if [ ! "$DATADIR" -o ! "$PROGDIR" -o ! "$SEEDLABELLINGDIR" -o ! "$RUNDIR" -o ! "$RESULTDIR" ]; then
+	echo "error: need environment variables set" 1>&2
+	exit 1
+fi
+
+if [ $# != 5 ]; then
+	echo "usage: $0 ACCURACY-CLEANNESS DATANAMES PROGNAMES PART CONTROLPROG" 1>&2
+	exit 1
+fi
+
+accuracycleanness=$1
+datanames=$2
+prognames=$3
+part=$4
+controlprog=$5
+
+pvaluethreshold=0.05
+which R > /dev/null && haver=yes
+
+case $accuracycleanness in
+noise) accuracycol=20; comparecol=35;;
+clean) accuracycol=27; comparecol=29;;
+*) echo "error: unknown accuracy cleanness $accuracycleanness" 1>&2; exit 1;;
+esac
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+# Accuracy data from results directory
+cat "$datanames" | while read data dataname; do
+	for accuracyseededness in normal nonseeded; do
+		cat "$prognames" | grep -v "^$" | while read prog doretrain dosignif progname; do
+			case "$doretrain" in
+			noretrain) cat "$RESULTDIR/$data.$prog.result/$part.$accuracyseededness" | tail -1;;
+			retrain) cat "$RESULTDIR/$data.$prog.retrain.$part.result/main.$accuracyseededness";;
+			*) echo "error: unknown retrain flag $doretrain" 1>&2; exit 1;;
+			esac
+		done | awk "{ printf(\"%0.2f\n\",\$$accuracycol*100) }" > "$tmp/$data.$accuracyseededness.dat"
+	done
+done
+
+# Statistical significance data, for which we have to do more evaluation of the run output
+if [ "$haver" ]; then
+	for accuracyseededness in normal nonseeded; do
+		cat "$datanames" | while read data dataname; do
+			cat "$prognames" | grep -v "^$" | while read prog doretrain dosignif progname; do
+				maxiter=$(cat "$RESULTDIR/$data.$prog.result/$part.$accuracyseededness" | tail -1 | cut -d ' ' -f 1)
+				case "$dosignif $doretrain" in
+				"signif noretrain") echo "$RUNDIR/$data.$prog.run/$maxiter.$part.test";;
+				"signif retrain") echo "$RUNDIR/$data.$prog.run/$maxiter.$part.retrain/1.main.test";;
+				"nosignif "*) echo "";;
+				*) echo "error: unknown significance or retrain flag $dosignif, $doretrain" 1>&2; exit 1;;
+				esac
+			done > "$tmp/resultlist"
+
+			if ! grep "$controlprog" "$tmp/resultlist" > "$tmp/controllist"; then
+				echo "error: no match for control program" 1>&2
+				exit 1
+			elif [ $(wc -l "$tmp/controllist" | cut -d ' ' -f 1) -gt 1 ]; then
+				echo "error: more than one match for control program"
+				cat "$tmp/controllist" | sed -e 's|^|error: match: |g' 1>&2
+				exit 1
+			fi
+			controlres=$(cat "$tmp/controllist")
+
+			case $accuracyseededness in
+			normal) evalopts="";;
+			nonseeded) evalopts="-s $SEEDLABELLINGDIR/$data";;
+			*) echo "error: unknown accuracy seededness $accuracyseededness" 1>&2; exit 1;;
+			esac
+
+			# Note that if we aren't doing statistical significance on a program, we just pretend it is the control program
+			cat "$tmp/resultlist" | sed -e "s|^\$|$controlres|g" | xargs $PROGDIR/evaluate $evalopts -c "$controlres" $DATADIR/$data/labels $DATADIR/$data/gold > "$tmp/$data.$accuracyseededness.eval"
+
+			cat "$tmp/$data.$accuracyseededness.eval" | awk "{ print \$($comparecol), \$($comparecol+1), \$($comparecol+2), \$($comparecol+3) }" | while read a b c d; do
+				# Use a binomial test as an exact form of McNemar, but fall back on the approximation for the boundary case to get output in the right format
+				if [ $b -eq $c ]; then echo "mcnemar.test(matrix(c($a, $b, $c, $d), 2, 2))"
+				elif [ $b -lt $c ]; then echo "binom.test($b, $(expr $b + $c), 0.5)"
+				else echo "binom.test($c, $(expr $b + $c), 0.5)"
+				fi
+			done | R --no-save | grep "p-value" | awk '{ if ($NF=="NA") { $NF=1.0 }; print $NF }' > "$tmp/$data.$accuracyseededness.pvalue"
+		done
+	done
+fi
+
+for accuracyseededness in normal nonseeded; do
+	# Add highlight for items which are best in column
+	cat "$datanames" | while read data dataname; do
+		awk 'NR==FNR { if ($1>b) {b=$1} } NR!=FNR { if ($1==b) {$1="\\textbf{"$1"}"}; print }' "$tmp/$data.$accuracyseededness.dat" "$tmp/$data.$accuracyseededness.dat" > "$tmp/$data.$accuracyseededness.col"
+	done
+
+	# Add highlight for items which have statistically significant difference versus the control
+	if [ "$haver" ]; then
+		cat "$datanames" | while read data dataname; do
+			paste "$tmp/$data.$accuracyseededness.col" "$tmp/$data.$accuracyseededness.pvalue" | awk "{ if (\$2<$pvaluethreshold) {\$1=\"\\\\emph{\"\$1\"}\"}; print \$1 }" > "$tmp/$data.$accuracyseededness.sigcol"
+		done
+		colsuffix=sigcol
+	else
+		colsuffix=col
+	fi
+done
+
+{
+	cat "$prognames" | grep -v '^$' | cut -d ' ' -f 4- > "$tmp/prognames"
+	cat "$datanames" | cut -d ' ' -f 1 | awk "{ print \"$tmp/\" \$1 \".normal.$colsuffix\"; print \"$tmp/\" \$1 \".nonseeded.$colsuffix\" }" | xargs paste -d '&' "$tmp/prognames" | sed -e 's|$|\\\\|g'
+} > "$tmp/table"
+
+echo "\\begin{tabular}{|l||cc|cc|cc|cc|}"
+echo "\\hline"
+echo "\\multirow{2}{*}{Algorithm}&\multicolumn{8}{|c|}{Task}\\\\"
+cat "$datanames" | cut -d ' ' -f 2- | awk '{ print "\\multicolumn{2}{c|}{"$0"}" }' | tr '\n' '&' | sed -e 's|^|\&|g;s|&$|\\\\\n|g'
+echo "\\hline"
+echo "\\hline"
+awk 'BEGIN { i=1 } NR==FNR { l[NR]=$1 } NR!=FNR { if (l[i]=="") { print "\\hline"; i++ }; print; i++ }' "$prognames" "$tmp/table"
+echo "\\hline"
+echo "\\hline"
+echo -n "Num. train/test examples"
+cat "$datanames" | while read data dataname; do
+	echo "\multicolumn{2}{|c|}{$(wc -l $DATADIR/$data/train | cut -d ' ' -f 1) / $(wc -l $DATADIR/$data/test | cut -d ' ' -f 1)}"
+done | tr '\n' '&' | sed -e 's|^|\&|g;s|&$|\\\\\n|g'
+echo "\\hline"
+echo "\\end{tabular}"

@@ -1,0 +1,45 @@
+#
+# Do evaluation on all test labellings found in a directory..
+#
+
+set -e
+
+if [ $# != 1 ]; then
+	echo "usage: $0 OUTPUT-DIR-PATTERN"
+	exit 1
+fi
+
+outdirpat=$1
+kinds="normal nonseeded"
+
+files=$(mktemp)
+res=$(mktemp)
+trap 'rm -rf "$files" "$res"' EXIT
+
+if [ -d "${outdirpat//REP/rep0}" ]; then i=0
+else i=1
+fi
+while true; do
+	dir="${outdirpat//REP/rep$i}"
+	i=$(($i + 1))
+	[ -d "$dir" ] || break
+	for kind in $kinds; do
+		find "$dir" -mindepth 1 -maxdepth 1 -name '*'.$kind | while read f; do
+			echo "$(basename "$f" .$kind) $f"
+		done
+	done
+done > "$files"
+
+out_mean="${outdirpat//REP/mean}"
+out_stddev="${outdirpat//REP/stddev}"
+mkdir -p "$out_mean" "$out_stddev"
+
+cat "$files" | cut -d ' ' -f 1 | sort | uniq | while read part; do
+	for kind in $kinds; do
+		< "$files" grep "^$part .*\.$kind\$" | while read k f; do
+			tail -1 "$f"
+		done | awk 'BEGIN { sf[3]=1;sf[5]=1;sf[9]=1;sf[11]=1;sf[16]=1;sf[18]=1;sf[23]=1;sf[25]=1;mf[7]=1;mf[13]=1;mf[20]=1;mf[27]=1 } { $1="last"; for (i=0;i<NF;i++) { w[i]=$i }; for (i in sf) { s[i]+=$i }; for (i in mf) { m[i]+=$i; v[i,NR]=$i } } END { for (i in w) { $i=w[i] }; for (i in sf) { $i=s[i] }; for (i in mf) { m[i]=m[i]/NR; $i=m[i] }; print; for (i in sf) { $i="-" } for (i in mf) { d=0; for (j=1;j<=NR;j++) { d+=((m[i]-v[i,j])^2) }; $i=sqrt(d/NR) }; print }' > "$res"
+		sed -n 1p "$res" > "$out_mean"/$part.$kind
+		sed -n 2p "$res" > "$out_stddev"/$part.$kind
+	done
+done

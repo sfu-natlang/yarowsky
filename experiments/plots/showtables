@@ -1,0 +1,18 @@
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+currentdir=$PWD
+
+{
+	echo "\\documentclass{article} \\usepackage{fullpage} \\usepackage{multirow} \\usepackage{amsmath} \\begin{document}"
+	for tablefile; do
+		echo "\\begin{table}"
+		echo "\\input{$currentdir/$tablefile}"
+		echo "\\caption{$(basename "$tablefile" .tex)} \\end{table}"
+	done
+	echo "\\end{document}"
+} > "$tmp/tables.tex"
+
+cd "$tmp"
+pdflatex "tables.tex"
+cat "tables.pdf"

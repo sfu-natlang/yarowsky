@@ -1,0 +1,7 @@
+Programs and experiments for the paper "Bootstrapping via Graph Propagation".
+Max Whitney and Anoop Sarkar
+{mwhitney,anoop}@sfu.ca
+Simon Fraser University, School of Computing Science
+Burnaby, BC V5A 1S6, Canada
+
+For license information, see the LICENCE file. For usage information, see the README files in the programs/ and experiments/ directories.

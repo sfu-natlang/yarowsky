@@ -1,0 +1,4 @@
+dlcotrain.cautious DL-CoTrain (cautious)
+yarowsky.noncautious.max Yarowsky
+yarowsky.cautious.max Yarowsky-cautious
+yarowsky.cautious.sum Yarowsky-cautious sum

@@ -1,0 +1,14 @@
+#
+# Produce labellings from the decision list seed rules for each data set.
+#
+
+if [ ! "$PROGDIR" -o ! "$DATADIR" -o ! "$SEEDLABELLINGDIR" ]; then
+	echo "error: need environment variables set" 1>&2
+	exit 1
+fi
+
+find $DATADIR -mindepth 1 -maxdepth 1 -type d | while read dir; do
+	set=$(basename $dir)
+	echo $set 1>&2
+	$PROGDIR/applydl $DATADIR/$set/seeds $DATADIR/$set/test > $SEEDLABELLINGDIR/$set
+done

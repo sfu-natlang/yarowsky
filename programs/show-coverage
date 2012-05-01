@@ -1,0 +1,8 @@
+
+ls -1 *.train | sort -n | sed -e 's|\.train$| |g' | while read prefix; do
+	echo "$prefix " | tr -d '\n'
+	labelled=$(grep -v '^$' "$prefix".train | wc -l)
+	total=$(wc -l "$prefix".train | cut -d ' ' -f 1)
+	echo $labelled $total
+done | awk '{ print $1, $2 / $3, $2, $3 }'
+

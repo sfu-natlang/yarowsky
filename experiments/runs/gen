@@ -1,0 +1,102 @@
+#
+# Generate experiment run commands.
+#
+
+set -e
+
+if [ ! "$PROGDIR" -o ! "$DATADIR" -o ! "$RUNDIR" ]; then
+	echo "error: need environment variables set" 1>&2
+	exit 1
+fi
+
+DATASETS="namedentity drug land sentence"
+ITERS=500
+
+function generate() {
+	d="$DATADIR/$1"
+
+	prog=dl
+	for combine in max sum; do
+		echo "$prog.$combine $PROGDIR/$prog $d/seeds $d/train $d/test $combine"
+	done
+
+	prog=yarowsky
+	yopts="0.1 0.95"
+	for cautiousness in cautious noncautious; do
+		case "$cautiousness" in
+		cautious) cautiousnum=5;;
+		noncautious) cautiousnum=-1;;
+		esac
+		for combine in max sum; do
+			echo "$prog.$cautiousness.$combine $PROGDIR/$prog $d/labels $d/features $d/train $d/test $d/seeds $ITERS $yopts $cautiousnum $combine"
+		done
+	done
+
+	prog=dlcotrain
+	yopts="0.1 0.95"
+	for cautiousness in cautious noncautious; do
+		case "$cautiousness" in
+		cautious) cautiousnum=5;;
+		noncautious) cautiousnum=-1;;
+		esac
+		echo "$prog.$cautiousness $PROGDIR/$prog $d/labels $d/features $d/view1 $d/view2 $d/train $d/test $d/seeds $ITERS $yopts $cautiousnum"
+	done
+
+	prog=yarowskyprop
+	combine=sum
+	yopts="0.1 0.95"
+	propopts="0.6 0.01"
+	propiters=1
+	for cautiousness in cautious noncautious; do
+		case "$cautiousness" in
+		cautious) cautiousnum=5;;
+		noncautious) cautiousnum=-1;;
+		esac
+		for proptype in thetaonly bipartite; do
+			case "$proptype" in
+			thetaonly) subtypes="theta thetatype";;
+			bipartite) subtypes="pi phi";;
+			esac
+			for propsubtype in $subtypes; do
+				echo "$prog.$cautiousness.$proptype.$propsubtype.$propiters $PROGDIR/$prog $d/labels $d/features $d/train $d/test $d/seeds $d/seeds $ITERS $yopts $cautiousnum $combine $proptype $propsubtype $propopts $propiters"
+			done
+		done
+	done
+
+	prog=hsgraph
+	for exampletofeat in majority average; do
+		for feattoexample in majority average; do
+			echo "$prog.$exampletofeat.$feattoexample $PROGDIR/$prog $d/labels $d/features $d/train $d/test $d/seeds $ITERS $exampletofeat $feattoexample"
+		done
+	done
+
+	prog=csem
+	reps=10
+	hard=false
+	for rep in $(seq $reps); do
+		randseed=$rep
+		for smoothing in 0.0 0.1; do
+			echo -e "1.0 1.0\n0.98 0.02" | while read fixed_weight hidden_weight; do
+				echo "$prog.$smoothing.$fixed_weight.$hidden_weight.rep$rep $PROGDIR/$prog $d/labels $d/features $d/train $d/test $d/seeds $ITERS $smoothing $fixed_weight $hidden_weight $hard $randseed"
+			done
+		done
+	done
+}
+
+i=0
+for dataset in $DATASETS; do
+	generate "$dataset" | sed -e "s|^|$dataset.|g"
+done | while read id cmd; do
+	dataset=$(echo "$id" | cut -d . -f 1)
+	dir=$RUNDIR/$id.run
+	if [ -e "$dir" ]; then
+		echo "$id: already done" 1>&2
+	else
+		i=$(expr $i + 1)
+		echo "$id: running $i" 1>&2
+		d="$DATADIR/$dataset"
+		smoothing=0.1
+		retraincmd="$RUNDIR/retraindl $dir $PROGDIR/traindl $d/labels $d/features $d/train $d/test $d/seeds $smoothing"
+		echo "mkdir -p $dir && cd $dir && $cmd 1>out 2>err && $retraincmd # $id"
+	fi
+done

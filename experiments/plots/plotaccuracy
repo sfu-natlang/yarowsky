@@ -1,0 +1,54 @@
+set -e
+
+if [ ! "$RESULTDIR" ]; then
+	echo "error: need environment variables set" 1>&2
+	exit 1
+fi
+
+if [ $# != 5 ]; then
+	echo "usage: $0 ACCURACY-CLEANNESS ACCURACY-SEEDEDNESS DATA PROGNAMES PART" 1>&2
+	exit 1
+fi
+
+accuracycleanness=$1
+accuracyseededness=$2
+data=$3
+prognames=$4
+part=$5
+
+case $accuracycleanness in
+noise) accuracycol=20;;
+clean) accuracycol=27;;
+*) echo "error: unknown accuracy cleanness $accuracycleanness" 1>&2; exit 1;;
+esac
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp" "$all"' EXIT
+
+cat "$prognames" | while read prog progname; do
+	{
+		cat "$RESULTDIR/$data.$prog.result/$part.$accuracyseededness"
+		maxiter=$(cat "$RESULTDIR/$data.$prog.result/$part.$accuracyseededness" | tail -1 | cut -d ' ' -f 1)
+		cat "$RESULTDIR/$data.$prog.retrain.$part.result/main.$accuracyseededness" | awk "{ \$1=\$1+$maxiter; print}"
+	} | cut -d ' ' -f 1,$accuracycol > "$tmp/$prog.dat"
+	head -1 "$tmp/$prog.dat" > "$tmp/$prog.dat.first"
+	tail -2 "$tmp/$prog.dat" | head -1 > "$tmp/$prog.dat.sndlast"
+	tail -1 "$tmp/$prog.dat" > "$tmp/$prog.dat.last"
+done
+
+{
+cat <<END
+set term postscript
+set key bottom right
+set xlabel "Iteration"
+set ylabel "Non-seeded test accuracy"
+set yrange [0.5:0.95]
+END
+echo -n 'plot '
+cat "$prognames" | nl -b a -w 1 -s ' ' | while read i prog progname; do
+	echo "'$tmp/$prog.dat' using 1:2 with lines linetype $i title ''"
+	echo "'$tmp/$prog.dat.first' using 1:2 with linespoints linetype $i pointtype $i title '$progname'"
+	echo "'$tmp/$prog.dat.sndlast' using 1:2 with linespoints linetype $i pointtype $i title ''"
+	echo "'$tmp/$prog.dat.last' using 1:2 with linespoints linetype $i pointtype $i title ''"
+done | tr '\n' ',' | sed -e 's|,$||g'
+} | gnuplot | ps2pdf - -
